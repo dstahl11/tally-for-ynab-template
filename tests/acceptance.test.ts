@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { loadEnv } from '../src/config/env.js';
 import { runMigrations } from '../src/db/migrate.js';
 import { seedDatabase } from '../src/db/seed.js';
-import { chatUsage, proposals as proposalsTable, queueItems, rules, settings as settingsTable, syncState, transactions as transactionsTable, writeLog } from '../src/db/schema.js';
+import { chatUsage, proposals as proposalsTable, queueItems, rules, sessions, settings as settingsTable, syncState, transactions as transactionsTable, writeLog } from '../src/db/schema.js';
 import { MockMessenger } from '../src/services/messages.js';
 import { HourlyLimiter, MockYnabClient } from '../src/services/ynab.js';
 import { SyncService, historyStartDate } from '../src/sync/service.js';
@@ -150,11 +150,22 @@ describe('M3 — authentication and member scoping', () => {
   it('locks a member PIN after five failed attempts', async () => {
     const { app } = setup();
     for (let attempt = 1; attempt <= 4; attempt += 1) {
-      expect((await app.request('/auth/pin', { method: 'POST', headers: { 'content-type': 'application/json', 'x-forwarded-for': '192.0.2.20' }, body: JSON.stringify({ userId: 'admin', pin: '000000' }) })).status).toBe(401);
+      expect((await app.request('/auth/pin', { method: 'POST', headers: { 'content-type': 'application/json', 'x-forwarded-for': `192.0.2.${attempt}` }, body: JSON.stringify({ userId: 'admin', pin: '000000' }) })).status).toBe(401);
     }
-    const locked = await app.request('/auth/pin', { method: 'POST', headers: { 'content-type': 'application/json', 'x-forwarded-for': '192.0.2.20' }, body: JSON.stringify({ userId: 'admin', pin: '000000' }) });
+    const locked = await app.request('/auth/pin', { method: 'POST', headers: { 'content-type': 'application/json', 'x-forwarded-for': '198.51.100.99' }, body: JSON.stringify({ userId: 'admin', pin: '000000' }) });
     expect(locked.status).toBe(429);
     expect(locked.headers.get('retry-after')).toBeTruthy();
+    expect((await app.request('/auth/pin', { method: 'POST', headers: { 'content-type': 'application/json', 'x-forwarded-for': '203.0.113.5' }, body: JSON.stringify({ userId: 'admin', pin: '123456' }) })).status).toBe(429);
+  });
+
+  it('revokes the server-side session on sign-out', async () => {
+    const { app, database } = setup();
+    const login = await app.request('/auth/pin', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ userId: 'admin', pin: '123456' }) });
+    const cookie = login.headers.get('set-cookie')!.split(';')[0];
+    expect((await app.request('/api/me', { headers: { cookie } })).status).toBe(200);
+    expect(database.db.select().from(sessions).all()).toHaveLength(1);
+    expect((await app.request('/auth/signout', { method: 'POST', headers: { cookie } })).status).toBe(200);
+    expect(database.db.select().from(sessions).all()).toHaveLength(0);
   });
 
   it('keeps the configurable member chat limit while exempting the admin', async () => {

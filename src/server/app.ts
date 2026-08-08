@@ -32,7 +32,24 @@ export interface AppServices {
 
 export function createApp(services: AppServices) {
   const app = new Hono<{ Variables: Variables }>();
-  const pinAttempts = new Map<string, { count: number; resetAt: number }>();
+  const pinAttemptKey = (userId: 'admin' | 'member') => `pin_attempts:${userId}`;
+  const pinAttemptWindowMs = 15 * 60_000;
+  const readPinAttempts = (userId: 'admin' | 'member', now: number) => {
+    const stored = services.database.db.select().from(settings).where(eq(settings.key, pinAttemptKey(userId))).get()?.value;
+    if (!stored || typeof stored !== 'object' || Array.isArray(stored)) return { count: 0, resetAt: now + pinAttemptWindowMs };
+    const count = Number((stored as Record<string, unknown>).count);
+    const resetAt = Number((stored as Record<string, unknown>).resetAt);
+    if (!Number.isInteger(count) || !Number.isFinite(resetAt) || resetAt <= now) return { count: 0, resetAt: now + pinAttemptWindowMs };
+    return { count, resetAt };
+  };
+  const savePinAttempts = (userId: 'admin' | 'member', value: { count: number; resetAt: number }) => {
+    const now = new Date().toISOString();
+    services.database.db.insert(settings).values({ key: pinAttemptKey(userId), value, updatedAt: now, updatedBy: 'auth' })
+      .onConflictDoUpdate({ target: settings.key, set: { value, updatedAt: now, updatedBy: 'auth' } }).run();
+  };
+  const clearPinAttempts = (userId: 'admin' | 'member') => {
+    services.database.db.delete(settings).where(eq(settings.key, pinAttemptKey(userId))).run();
+  };
 
   app.use('/api/*', async (context, next) => {
     const mockId = context.req.header('x-mock-user') ?? getCookie(context, 'mock_user');
@@ -56,11 +73,8 @@ export function createApp(services: AppServices) {
   app.post('/auth/pin', async (context) => {
     const parsed = z.object({ userId: z.enum(['admin', 'member']), pin: z.string().regex(/^\d{6}$/) }).safeParse(await context.req.json().catch(() => ({})));
     if (!parsed.success) return context.json({ error: 'invalid_credentials' }, 401);
-    const address = context.req.header('x-forwarded-for')?.split(',')[0]?.trim() ?? 'local';
-    const key = `${address}:${parsed.data.userId}`;
     const now = Date.now();
-    const previous = pinAttempts.get(key);
-    const attempt = !previous || previous.resetAt <= now ? { count: 0, resetAt: now + 15 * 60_000 } : previous;
+    const attempt = readPinAttempts(parsed.data.userId, now);
     if (attempt.count >= 5) {
       context.header('Retry-After', String(Math.ceil((attempt.resetAt - now) / 1000)));
       return context.json({ error: 'too_many_attempts' }, 429);
@@ -68,14 +82,14 @@ export function createApp(services: AppServices) {
     const result = services.auth.signInWithPin(parsed.data.userId, parsed.data.pin);
     if (!result) {
       const failed = { ...attempt, count: attempt.count + 1 };
-      pinAttempts.set(key, failed);
+      savePinAttempts(parsed.data.userId, failed);
       if (failed.count >= 5) {
         context.header('Retry-After', String(Math.ceil((failed.resetAt - now) / 1000)));
         return context.json({ error: 'too_many_attempts' }, 429);
       }
       return context.json({ error: 'invalid_credentials' }, 401);
     }
-    pinAttempts.delete(key);
+    clearPinAttempts(parsed.data.userId);
     setCookie(context, 'ynab_session', result.sessionToken, { httpOnly: true, secure: services.env.APP_HOST.startsWith('https://'), sameSite: 'Lax', maxAge: 30 * 86400, path: '/' });
     return context.json({ ok: true, userId: result.userId });
   });
@@ -111,7 +125,12 @@ export function createApp(services: AppServices) {
     setCookie(context, 'mock_user', context.req.param('user'), { httpOnly: true, sameSite: 'Lax', path: '/' });
     return context.redirect('/');
   });
-  app.post('/auth/signout', (context) => { deleteCookie(context, 'ynab_session'); deleteCookie(context, 'mock_user'); return context.json({ ok: true }); });
+  app.post('/auth/signout', (context) => {
+    services.auth.revokeSession(getCookie(context, 'ynab_session'));
+    deleteCookie(context, 'ynab_session', { path: '/' });
+    deleteCookie(context, 'mock_user', { path: '/' });
+    return context.json({ ok: true });
+  });
 
   app.get('/api/me', (context) => {
     const user = context.get('user');
