@@ -1,0 +1,7 @@
+{
+  "spendPercentages": [50, 75, 90],
+  "unknownMonthlyReviewMilli": null,
+  "chatRequestsPerUserPerDay": 50,
+  "reimbursementFloatCategories": [],
+  "holdbackEnabled": true
+}

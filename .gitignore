@@ -1,0 +1,14 @@
+node_modules/
+dist/
+web/dist/
+data/
+coverage/
+.env
+.env.swp
+deploy/mock.env
+deploy/*.env
+*.swp
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+.DS_Store

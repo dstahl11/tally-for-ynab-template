@@ -1,0 +1,1 @@
+ALTER TABLE `queue_items` ADD `retry_count` integer DEFAULT 0 NOT NULL;

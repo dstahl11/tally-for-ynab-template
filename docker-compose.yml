@@ -1,0 +1,58 @@
+name: ynab-companion
+services:
+  app:
+    build: .
+    image: ynab-companion:local
+    container_name: ynab-companion
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_PATH: /data/ynab-companion.sqlite
+      PORT: 3000
+      CHAT_DAILY_LIMIT: ${CHAT_DAILY_LIMIT:-250}
+    volumes:
+      - ynab_data:/data
+    ports:
+      - "3030:3000"
+    networks: [ynab]
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: ynab-companion-tunnel
+    restart: unless-stopped
+    profiles: [live]
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    depends_on:
+      app:
+        condition: service_healthy
+    networks: [ynab]
+
+  litestream:
+    image: litestream/litestream:0.3
+    container_name: ynab-companion-litestream
+    restart: unless-stopped
+    profiles: [live]
+    command: replicate
+    environment:
+      DATABASE_PATH: /data/ynab-companion.sqlite
+      R2_ENDPOINT: ${R2_ENDPOINT:-}
+      R2_BUCKET: ${R2_BUCKET:-}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:-}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:-}
+    volumes:
+      - ynab_data:/data
+      - ./litestream.yml:/etc/litestream.yml:ro
+    depends_on:
+      app:
+        condition: service_healthy
+    networks: [ynab]
+
+networks:
+  ynab:
+    name: ynab-companion
+
+volumes:
+  ynab_data:
+    name: ynab-companion-data
