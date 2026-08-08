@@ -73,6 +73,11 @@ export class AuthService {
     return this.database.db.select().from(users).where(eq(users.id, session.userId)).get() ?? null;
   }
 
+  revokeSession(token: string | undefined) {
+    if (!token) return;
+    this.database.db.delete(sessions).where(eq(sessions.tokenHash, hash(token))).run();
+  }
+
   mockUser(id: string) {
     if (!this.env.MOCK_EXTERNALS) return null;
     return this.database.db.select().from(users).where(eq(users.id, id)).get() ?? null;

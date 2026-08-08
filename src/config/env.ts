@@ -11,7 +11,6 @@ const schema = z.object({
   DATABASE_PATH: z.string().default('./data/ynab-companion.sqlite'),
   APP_HOST: z.string().default('http://localhost:3000'),
   APP_NAME: z.string().default('Tally'),
-  SESSION_SECRET: z.string().min(16).default('mock-session-secret-change-before-live'),
   TIMEZONE: z.string().default('America/New_York'),
   DRY_RUN: booleanString,
   MOCK_EXTERNALS: booleanString,

@@ -149,7 +149,6 @@ Then provide:
 - Anthropic API credentials for AI inference;
 - Twilio credentials if you want SMS sign-in or notifications;
 - the member's YNAB account, category-group, and optional category IDs;
-- a random session secret of at least 32 characters.
 
 Never commit `.env`, databases, backup credentials, phone numbers, PINs, or
 tunnel tokens. SMS registration, consent language, privacy terms, and carrier
@@ -182,7 +181,9 @@ See `docs/OPERATIONS.md` before enabling writes.
   transaction counts disagree.
 - Member access is scoped to configured YNAB accounts and categories.
 - Magic links expire after 15 minutes, work once, and are rate-limited.
-- Five failed PIN attempts lock that profile for 15 minutes.
+- Five failed PIN attempts persistently lock that profile for 15 minutes, even
+  across restarts and changing client addresses.
+- Sign-out revokes the server-side session rather than only clearing the cookie.
 
 ## License
 
