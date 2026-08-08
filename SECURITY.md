@@ -14,8 +14,3 @@ than opening a public issue. Rotate any credential that may have been exposed.
   enabled on the public repository.
 - The runtime Docker image omits development dependencies and runs as the
   unprivileged `node` user.
-
-`drizzle-kit` currently includes an `esbuild` development-server advisory in
-its migration-generation toolchain. It is not installed in the production
-image. Do not expose Drizzle's development server to untrusted networks; update
-the toolchain when the upstream dependency is replaced.
