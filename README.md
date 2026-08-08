@@ -1,11 +1,76 @@
 # Tally for YNAB
 
-A self-hosted, white-label companion for a two-person YNAB household. It adds
-verified sync, scoped member access, transaction categorization, funding
-proposals, budget pace, charts, and read-only AI-assisted questions.
+A self-hosted, white-label companion for YNAB built around two access roles: a
+household admin and a household member. It gives each person a focused view of
+the categories they care about without implying a limit on household size.
+
+Tally turns a busy budget into a useful daily dashboard. See which important
+categories are on track, find and fix uncategorized transactions with AI
+suggestions as a starting point, and ask natural-language questions about the
+budget. Answers can include clickable charts that drill into the matching
+transactions and preserve the period being discussed.
 
 This repository contains only mock data and placeholders. It is safe to run
 without YNAB, Anthropic, or Twilio credentials.
+
+## Product tour
+
+### A focused status dashboard
+
+Choose which categories appear on the overview, see how much is assigned or
+left, and open any category to review its transactions and monthly pace.
+
+![Tally overview showing category status and pace](docs/images/overview.png)
+
+| AI-assisted Mystery Queue | Ask the budget |
+| --- | --- |
+| Find uncategorized transactions and start with ranked AI suggestions. The user always makes the categorization decision. | Ask about spending, pace, merchants, categories, or time periods and get scoped answers with interactive charts and follow-up actions. |
+| ![Mystery Queue with AI category suggestions](docs/images/mystery-queue.png) | ![Budget question answered with a spending chart](docs/images/ask-with-chart.png) |
+
+All screenshots use the built-in mock budget. No real financial data or
+credentials are included in this repository.
+
+## What it does
+
+- **Personalized overview:** each user can show or hide categories and focus on
+  the balances and pacing signals that matter most to them.
+- **Budget pace:** compares spending with the point in the month and highlights
+  categories that are on track, need attention, or are off pace.
+- **AI-assisted categorization:** the Mystery Queue surfaces uncategorized
+  transactions with ranked category suggestions, an explanation, and a manual
+  fallback. Suggestions never become writes until a user chooses one.
+- **Ask the budget:** read-only, AI-assisted questions return numerical answers,
+  category or merchant breakdowns, trends, transaction lists, and clickable
+  charts. Follow-up buttons run immediately and retain the relevant date range.
+- **Role-based access:** the admin can see household-wide data and system
+  controls; the member is limited to configured accounts, category groups, and
+  categories.
+- **Funding pass and proposals:** a monthly essentials-first funding pass can
+  prepare reviewable proposals for the remaining categories, with dry-run and
+  approval controls before any live YNAB change.
+- **Approval assistant:** familiar, predictable transactions can be reviewed or
+  automatically approved using configurable history, consistency, amount, and
+  per-sync safeguards.
+- **Verified synchronization:** incremental YNAB sync is reconciled before
+  downstream jobs run, and the default history window covers the previous 24
+  months.
+
+## More features already included
+
+- Category drill-down pages with scoped transaction history.
+- Active/unhidden YNAB category syncing for the essentials list.
+- User-approved payee-to-category learning after repeated corrections.
+- Subscription-creep, placeholder-target, and new-recurring-expense detectors
+  that create proposals instead of making surprise changes.
+- Spend-threshold alerts, Mystery Queue digests, and proposal approval by SMS.
+- One-time SMS sign-in links with a six-digit PIN fallback, expiration, rate
+  limits, and lockout protection.
+- A dry-run write gateway, reversal hints, and an audit log for every proposed
+  or executed YNAB mutation.
+- Installable PWA support, responsive layouts, Docker deployment, optional
+  Cloudflare Tunnel, and optional Litestream backups.
+- Mock external services, seeded demo data, automated tests, and CI checks for
+  safe evaluation before connecting a real budget.
 
 ## Try it locally
 
