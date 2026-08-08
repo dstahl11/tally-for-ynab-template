@@ -49,6 +49,11 @@ function normalized(value: string): string {
   return value.normalize('NFKD').replace(/\p{Diacritic}/gu, '').replace(/[^\p{Letter}\p{Number}]+/gu, ' ').trim().toLowerCase();
 }
 
+const merchantEntities: Record<string, string> = { '&amp;': '&', '&#39;': "'", '&quot;': '"' };
+export function cleanMerchantName(value: string): string {
+  return value.replace(/&(?:amp|#39|quot);/g, (entity) => merchantEntities[entity] ?? entity).trim();
+}
+
 export function inferBudgetConcept(query: string, candidates: BudgetCategoryCandidate[]): BudgetConcept | null {
   const normalizedQuery = normalized(query);
   const exactCategories = candidates.filter((candidate) => {
@@ -420,7 +425,7 @@ For every focused answer, the category_names sent to get_spending_breakdown are 
     return shifted.toISOString().slice(0, 10);
   }
   private cleanMerchant(value: string): string {
-    return value.replaceAll('&amp;', '&').replaceAll('&#39;', "'").replaceAll('&quot;', '"').trim();
+    return cleanMerchantName(value);
   }
   private focusedAnswer(result: ReturnType<ChatService['spendingBreakdown']>) {
     const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
