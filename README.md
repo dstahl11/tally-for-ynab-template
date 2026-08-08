@@ -1,74 +1,110 @@
-# Tally for YNAB
+<p align="center">
+  <img src="web/public/brand/icon-256.png" width="112" alt="Tally calculator icon">
+</p>
 
-A self-hosted, white-label companion for YNAB built around two access roles: a
-household admin and a household member. It gives each person a focused view of
-the categories they care about without implying a limit on household size.
+<h1 align="center">Tally for YNAB</h1>
 
-Tally turns a busy budget into a useful daily dashboard. See which important
-categories are on track, find and fix uncategorized transactions with AI
-suggestions as a starting point, and ask natural-language questions about the
-budget. Answers can include clickable charts that drill into the matching
-transactions and preserve the period being discussed.
+<p align="center">
+  <strong>A calmer, more focused way to understand and maintain a household budget.</strong>
+  <br>
+  Personalized category status, AI-assisted cleanup, and answers you can explore.
+</p>
 
-This repository contains only mock data and placeholders. It is safe to run
-without YNAB, Anthropic, or Twilio credentials.
+<p align="center">
+  <a href="https://github.com/dstahl11/tally-for-ynab-template/actions/workflows/ci.yml"><img alt="CI status" src="https://github.com/dstahl11/tally-for-ynab-template/actions/workflows/ci.yml/badge.svg"></a>
+  <img alt="Node.js 22" src="https://img.shields.io/badge/Node.js-22-339933?logo=nodedotjs&logoColor=white">
+  <img alt="Docker ready" src="https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white">
+  <img alt="Installable PWA" src="https://img.shields.io/badge/PWA-installable-5A0FC8?logo=pwa&logoColor=white">
+  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-5b321c"></a>
+</p>
+
+<p align="center">
+  <a href="#product-tour">Product tour</a> ·
+  <a href="#core-capabilities">Capabilities</a> ·
+  <a href="#try-it-locally">Quick start</a> ·
+  <a href="#white-label-it">White-labeling</a> ·
+  <a href="#safety-model">Safety</a>
+</p>
+
+Tally is a self-hosted, white-label YNAB companion built around two access
+roles: a **household admin** and a **household member**. It does not assume a
+two-person household. The admin gets household-wide controls, while the member
+gets a deliberately scoped view of the accounts and categories relevant to
+them.
+
+> [!NOTE]
+> This template ships with mock services, seeded demo data, and placeholder
+> configuration. The screenshots below contain no real financial data, phone
+> numbers, or credentials.
 
 ## Product tour
 
-### A focused status dashboard
+### See the categories that matter—without the noise
 
-Choose which categories appear on the overview, see how much is assigned or
-left, and open any category to review its transactions and monthly pace.
+Choose which categories appear on the overview, scan assigned and remaining
+amounts, and spot pace problems before they become month-end surprises. Every
+category opens into its scoped transaction history.
 
-![Tally overview showing category status and pace](docs/images/overview.png)
+<p align="center">
+  <a href="docs/images/overview.png">
+    <img src="docs/images/overview.png" width="100%" alt="Tally overview showing ready to assign, category balances, and budget pace">
+  </a>
+  <br>
+  <sub><strong>Focused overview:</strong> ready-to-assign status, personalized categories, and pace at a glance.</sub>
+</p>
 
-| AI-assisted Mystery Queue | Ask the budget |
+### Turn uncategorized transactions into a quick review queue
+
+The Mystery Queue presents one decision at a time. AI suggestions provide a
+ranked starting point and a plain-language reason; the user makes the final
+categorization choice or picks a different category.
+
+<p align="center">
+  <a href="docs/images/mystery-queue.png">
+    <img src="docs/images/mystery-queue.png" width="100%" alt="Mystery Queue showing an uncategorized transaction with AI category suggestions">
+  </a>
+  <br>
+  <sub><strong>AI-assisted, human-decided:</strong> suggestions accelerate cleanup without silently changing the budget.</sub>
+</p>
+
+### Ask a question, then explore the answer
+
+Ask about spending, merchants, categories, pace, or time periods in everyday
+language. Tally returns a scoped numerical answer with the right visual—then
+lets you click chart segments or follow-up actions to inspect the transactions
+behind it without losing the original date range.
+
+<p align="center">
+  <a href="docs/images/ask-with-chart.png">
+    <img src="docs/images/ask-with-chart.png" width="100%" alt="Tally answering a food spending question with a clickable donut chart">
+  </a>
+  <br>
+  <sub><strong>Ask the budget:</strong> useful answers, interactive charts, and one-click follow-up questions.</sub>
+</p>
+
+## Core capabilities
+
+| Daily budget experience | Automation with guardrails |
 | --- | --- |
-| Find uncategorized transactions and start with ranked AI suggestions. The user always makes the categorization decision. | Ask about spending, pace, merchants, categories, or time periods and get scoped answers with interactive charts and follow-up actions. |
-| ![Mystery Queue with AI category suggestions](docs/images/mystery-queue.png) | ![Budget question answered with a spending chart](docs/images/ask-with-chart.png) |
+| **Personalized overview**<br>Show or hide categories per user and focus on the balances that matter. | **Verified synchronization**<br>Incremental YNAB sync reconciles before downstream jobs run, with 24 months of history by default. |
+| **Budget pace**<br>See which categories are on track, need attention, or are running off pace. | **Funding pass and proposals**<br>Run an essentials-first monthly pass and review proposed funding for everything else. |
+| **Mystery Queue**<br>Resolve uncategorized transactions from ranked AI suggestions or the full category list. | **Approval assistant**<br>Review or automatically approve familiar transactions using configurable history, consistency, amount, and per-sync safeguards. |
+| **Ask the budget**<br>Get read-only answers, trends, merchant and category breakdowns, transaction lists, and clickable charts. | **Dry-run write gateway**<br>Log proposed mutations, reversal hints, and execution results before enabling live YNAB changes. |
+| **Scoped member access**<br>Limit the member to configured accounts, category groups, and categories. | **Reconciliation fail-safe**<br>Pause downstream automation if local and YNAB transaction counts disagree. |
 
-All screenshots use the built-in mock budget. No real financial data or
-credentials are included in this repository.
+### More included out of the box
 
-## What it does
-
-- **Personalized overview:** each user can show or hide categories and focus on
-  the balances and pacing signals that matter most to them.
-- **Budget pace:** compares spending with the point in the month and highlights
-  categories that are on track, need attention, or are off pace.
-- **AI-assisted categorization:** the Mystery Queue surfaces uncategorized
-  transactions with ranked category suggestions, an explanation, and a manual
-  fallback. Suggestions never become writes until a user chooses one.
-- **Ask the budget:** read-only, AI-assisted questions return numerical answers,
-  category or merchant breakdowns, trends, transaction lists, and clickable
-  charts. Follow-up buttons run immediately and retain the relevant date range.
-- **Role-based access:** the admin can see household-wide data and system
-  controls; the member is limited to configured accounts, category groups, and
-  categories.
-- **Funding pass and proposals:** a monthly essentials-first funding pass can
-  prepare reviewable proposals for the remaining categories, with dry-run and
-  approval controls before any live YNAB change.
-- **Approval assistant:** familiar, predictable transactions can be reviewed or
-  automatically approved using configurable history, consistency, amount, and
-  per-sync safeguards.
-- **Verified synchronization:** incremental YNAB sync is reconciled before
-  downstream jobs run, and the default history window covers the previous 24
-  months.
-
-## More features already included
-
-- Category drill-down pages with scoped transaction history.
-- Active/unhidden YNAB category syncing for the essentials list.
+- Category drill-down pages with date-aware, scoped transaction history.
+- Active and unhidden YNAB category syncing for the essentials selector.
 - User-approved payee-to-category learning after repeated corrections.
 - Subscription-creep, placeholder-target, and new-recurring-expense detectors
-  that create proposals instead of making surprise changes.
+  that produce proposals instead of surprise changes.
 - Spend-threshold alerts, Mystery Queue digests, and proposal approval by SMS.
 - One-time SMS sign-in links with a six-digit PIN fallback, expiration, rate
   limits, and lockout protection.
-- A dry-run write gateway, reversal hints, and an audit log for every proposed
-  or executed YNAB mutation.
-- Installable PWA support, responsive layouts, Docker deployment, optional
-  Cloudflare Tunnel, and optional Litestream backups.
+- Responsive and installable PWA layouts for desktop and mobile.
+- Docker deployment, optional Cloudflare Tunnel, and optional Litestream
+  backups.
 - Mock external services, seeded demo data, automated tests, and CI checks for
   safe evaluation before connecting a real budget.
 
